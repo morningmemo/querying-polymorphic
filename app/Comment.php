@@ -27,7 +27,9 @@ class Comment extends Model
 
                 $query->select('*')->from($table)->where("{$this->getTable()}.{$type}", $modelClass)
                     ->whereRaw("{$this->getTable()}.{$key} = {$table}.{$model->getKeyName()}")
-                    ->when($callable instanceof \Closure, $callable);
+                    ->when($callable instanceof \Closure, function ($query) use ($callable) {
+                        $query->where($callable);
+                    });
             });
         });
 
