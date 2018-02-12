@@ -26,11 +26,18 @@ class Comment extends Model
                 $query->orWhereExists(function ($query) use ($table, $modelClass, $type, $key, $callable) {
                     $model = new $modelClass;
 
-                    $query->select('*')->from($table)->where("{$this->getTable()}.{$type}", $modelClass)
+                    $eloBuilder = clone $model->query();
+                    $eloBuilder
+                        ->where("{$this->getTable()}.{$type}", $modelClass)
                         ->whereRaw("{$this->getTable()}.{$key} = {$table}.{$model->getKeyName()}")
-                        ->when($callable instanceof \Closure, function ($query) use ($callable) {
+                        ->when($callable instanceof \Closure, function ($query) use ($callable, $model) {
                             $query->where($callable);
                         });
+
+                    $query->selectRaw(
+                        ltrim($eloBuilder->toSql(), 'select '),
+                        $eloBuilder->getBindings()
+                    );
                 });
             });
         });
